@@ -1,0 +1,2 @@
+# EternalNightEsp
+Made for fun
