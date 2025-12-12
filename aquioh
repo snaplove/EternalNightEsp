@@ -1,42 +1,133 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+--[[ 
+    SNAP ESP v6 - VERSÃO NATIVA (Roblox Studio Compatible)
+    Não usa HttpGet, nem bibliotecas externas.
+]]
+
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
-local Camera = Workspace.CurrentCamera
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Configurações Globais
+-- Detecta se está no Studio ou em Jogo para saber onde colocar a UI
+local parentUI = (RunService:IsStudio() and PlayerGui) or CoreGui
+
+--------------------------------------------------------------------------------
+-- CONFIGURAÇÕES
+--------------------------------------------------------------------------------
 local Config = {
     Animatronics = false,
     AnimatronicsNames = false,
     Fuses = false,
-    FuseColor = Color3.fromRGB(0, 255, 0),
-    MonsterColor = Color3.fromRGB(255, 0, 0)
+    FuseColor = Color3.fromRGB(0, 255, 0),    -- Verde
+    MonsterColor = Color3.fromRGB(255, 0, 0)  -- Vermelho
 }
 
--- Tabelas de Armazenamento
 local ActiveESP = {
-    Animatronics = {},
-    Fuses = {}
+    Animatronics = {}, -- Guarda os Highlights
+    Fuses = {}         -- Guarda os BoxAdornments
 }
 
 --------------------------------------------------------------------------------
--- SISTEMA DE UI (RAYFIELD)
+-- INTERFACE (GUI NATIVA)
 --------------------------------------------------------------------------------
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SnapEspUI_v6_Native"
+ScreenGui.ResetOnSpawn = false
+-- Tenta colocar no CoreGui (protegido) se for exploit, senão PlayerGui
+pcall(function() ScreenGui.Parent = parentUI end)
+if not ScreenGui.Parent then ScreenGui.Parent = PlayerGui end
 
-local Window = Rayfield:CreateWindow({
-    Name = "Snap ESP - Ultimate v6",
-    LoadingTitle = "Carregando...",
-    LoadingSubtitle = "by Snap",
-    ConfigurationSaving = { Enabled = false },
-    KeySystem = false,
-})
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 220, 0, 200)
+MainFrame.Position = UDim2.new(0.05, 0, 0.5, -100)
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
 
-local Tab = Window:CreateTab("Visuals", 4483362458) -- Icone de olho
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Title.Text = "SNAP ESP v6 (Native)"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 16
+Title.Parent = MainFrame
+
+-- Botão Minimizar
+local MinBtn = Instance.new("TextButton")
+MinBtn.Size = UDim2.new(0, 30, 0, 30)
+MinBtn.Position = UDim2.new(1, -30, 0, 0)
+MinBtn.BackgroundTransparency = 1
+MinBtn.Text = "-"
+MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinBtn.TextSize = 20
+MinBtn.Font = Enum.Font.SourceSansBold
+MinBtn.Parent = MainFrame
+
+local OpenBtn = Instance.new("TextButton")
+OpenBtn.Size = UDim2.new(0, 50, 0, 30)
+OpenBtn.Position = MainFrame.Position
+OpenBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+OpenBtn.Text = "ABRIR"
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.Font = Enum.Font.SourceSansBold
+OpenBtn.Visible = false
+OpenBtn.Draggable = true
+OpenBtn.Parent = ScreenGui
+
+MinBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    OpenBtn.Visible = true
+    OpenBtn.Position = MainFrame.Position
+end)
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    OpenBtn.Visible = false
+    MainFrame.Position = OpenBtn.Position
+end)
+
+-- Função Helper para criar Botões Toggle
+local function CreateToggle(text, yPos, default, callback)
+    local Label = Instance.new("TextLabel")
+    Label.Text = text
+    Label.Size = UDim2.new(0.7, 0, 0, 30)
+    Label.Position = UDim2.new(0.05, 0, 0, yPos)
+    Label.BackgroundTransparency = 1
+    Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Font = Enum.Font.SourceSans
+    Label.TextSize = 16
+    Label.Parent = MainFrame
+
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(0, 20, 0, 20)
+    Button.Position = UDim2.new(0.95, -20, 0, yPos + 5)
+    Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Button.Text = ""
+    Button.Parent = MainFrame
+
+    local toggled = default
+    
+    local function Update()
+        Button.BackgroundColor3 = toggled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(50, 50, 50)
+        callback(toggled)
+    end
+
+    Button.MouseButton1Click:Connect(function()
+        toggled = not toggled
+        Update()
+    end)
+end
 
 --------------------------------------------------------------------------------
--- FUNÇÕES CORE (ESP)
+-- SISTEMA DE ESP (LÓGICA V6)
 --------------------------------------------------------------------------------
 
 local function GetDistance(part)
@@ -46,57 +137,63 @@ local function GetDistance(part)
     return 0
 end
 
--- Cria Texto Flutuante com Distância
-local function CreateBillboard(target, name, color, isActiveFunc)
+-- Cria Texto Flutuante com Distância (Billboard)
+local function CreateBillboard(target, name, color, checkConfigFunc)
     local bg = Instance.new("BillboardGui")
-    bg.Name = "SnapESP_Info"
+    bg.Name = "ESP_Info"
     bg.Adornee = target
     bg.Size = UDim2.new(0, 200, 0, 50)
-    bg.StudsOffset = Vector3.new(0, 3, 0) -- Altura do texto
+    bg.StudsOffset = Vector3.new(0, 3, 0)
     bg.AlwaysOnTop = true
-    bg.Parent = target
+    bg.Parent = (RunService:IsStudio() and target) or CoreGui -- No Studio parenta no alvo, exploit no CoreGui
+    if RunService:IsStudio() then bg.Parent = target end -- Garante visualização no Studio
 
     local textLabel = Instance.new("TextLabel")
     textLabel.Size = UDim2.new(1, 0, 1, 0)
     textLabel.BackgroundTransparency = 1
     textLabel.TextColor3 = color
     textLabel.TextStrokeTransparency = 0
-    textLabel.Font = Enum.Font.GothamBold
-    textLabel.TextSize = 15
+    textLabel.Font = Enum.Font.SourceSansBold
+    textLabel.TextSize = 14
     textLabel.Parent = bg
 
-    -- Loop de atualização de distância
+    -- Loop de atualização individual
     local connection
     connection = RunService.RenderStepped:Connect(function()
-        if not target or not target.Parent or not isActiveFunc() then
+        if not target or not target.Parent then
             connection:Disconnect()
             bg:Destroy()
             return
         end
         
-        local dist = math.floor(GetDistance(target))
-        textLabel.Text = string.format("%s\n[%d m]", name, dist)
-        textLabel.Visible = isActiveFunc() -- Só mostra se o toggle estiver ligado
+        -- Verifica se deve mostrar
+        if not checkConfigFunc() then
+            bg.Enabled = false
+        else
+            bg.Enabled = true
+            local dist = math.floor(GetDistance(target))
+            textLabel.Text = string.format("%s\n[%d m]", name, dist)
+        end
     end)
     
     return bg
 end
 
--- ESP para Animatronics (Usa Highlight - Brilho)
+-- ESP para Animatronics (Highlight)
 local function AddAnimatronicESP(model)
-    if ActiveESP.Animatronics[model] then return end -- Já tem
+    if ActiveESP.Animatronics[model] then return end 
 
-    -- 1. Highlight (Brilho)
+    -- Highlight
     local hl = Instance.new("Highlight")
-    hl.Name = "SnapESP_Highlight"
+    hl.Name = "ESP_Highlight"
     hl.FillColor = Config.MonsterColor
     hl.OutlineColor = Color3.new(1, 1, 1)
     hl.FillTransparency = 0.5
     hl.OutlineTransparency = 0
     hl.Parent = model
-    hl.Enabled = Config.Animatronics
+    hl.Enabled = Config.Animatronics -- Começa respeitando a config
 
-    -- 2. Nome e Distância
+    -- Nome/Distância
     local root = model.PrimaryPart or model:FindFirstChild("HumanoidRootPart") or model:FindFirstChildWhichIsA("BasePart")
     if root then
         CreateBillboard(root, model.Name, Config.MonsterColor, function() return Config.AnimatronicsNames end)
@@ -104,27 +201,23 @@ local function AddAnimatronicESP(model)
 
     ActiveESP.Animatronics[model] = hl
 
-    -- Limpeza se o monstro morrer/sumir
     model.AncestryChanged:Connect(function(_, parent)
-        if not parent then
-            ActiveESP.Animatronics[model] = nil
-        end
+        if not parent then ActiveESP.Animatronics[model] = nil end
     end)
 end
 
--- ESP para Fuses (Usa BoxHandleAdornment - Linhas 3D)
--- Isso é melhor que highlight para itens pequenos e não tem limite de quantidade
+-- ESP para Fuses (BoxHandleAdornment - Otimizado)
 local function AddFuseESP(tool)
     if ActiveESP.Fuses[tool] then return end
     
     local handle = tool:FindFirstChild("Handle")
     if not handle then return end
 
-    -- 1. Box Adornment (Caixa em volta)
+    -- Box Adornment (Wireframe)
     local box = Instance.new("BoxHandleAdornment")
-    box.Name = "SnapESP_Box"
+    box.Name = "ESP_Box"
     box.Adornee = handle
-    box.Size = handle.Size + Vector3.new(0.2, 0.2, 0.2)
+    box.Size = handle.Size + Vector3.new(0.1, 0.1, 0.1)
     box.Color3 = Config.FuseColor
     box.Transparency = 0.4
     box.AlwaysOnTop = true
@@ -132,107 +225,71 @@ local function AddFuseESP(tool)
     box.Parent = handle
     box.Visible = Config.Fuses
 
-    -- 2. Nome
+    -- Nome/Distância
     CreateBillboard(handle, "Fuse", Config.FuseColor, function() return Config.Fuses end)
 
     ActiveESP.Fuses[tool] = box
 
     tool.AncestryChanged:Connect(function(_, parent)
-        if not parent then
-            ActiveESP.Fuses[tool] = nil
-        end
+        if not parent then ActiveESP.Fuses[tool] = nil end
     end)
 end
 
 --------------------------------------------------------------------------------
--- INTERAÇÃO DA UI
+-- CONECTANDO BOTÕES
 --------------------------------------------------------------------------------
 
-Tab:CreateSection("Animatronics")
-
-Tab:CreateToggle({
-    Name = "Ver Animatronics (Highlight)",
-    CurrentValue = false,
-    Flag = "ToggleAnimatronics",
-    Callback = function(Value)
-        Config.Animatronics = Value
-        -- Atualiza os que já existem
-        for _, hl in pairs(ActiveESP.Animatronics) do
-            if hl then hl.Enabled = Value end
-        end
-    end,
-})
-
-Tab:CreateToggle({
-    Name = "Ver Nomes & Distância",
-    CurrentValue = false,
-    Flag = "ToggleNames",
-    Callback = function(Value)
-        Config.AnimatronicsNames = Value
-    end,
-})
-
-Tab:CreateColorPicker({
-    Name = "Cor dos Monstros",
-    Color = Color3.fromRGB(255, 0, 0),
-    Callback = function(Value)
-        Config.MonsterColor = Value
-        for _, hl in pairs(ActiveESP.Animatronics) do
-            if hl then hl.FillColor = Value end
-        end
+CreateToggle("Monstros (Cor)", 40, false, function(state)
+    Config.Animatronics = state
+    for _, hl in pairs(ActiveESP.Animatronics) do
+        if hl then hl.Enabled = state end
     end
-})
+end)
 
-Tab:CreateSection("Itens")
+CreateToggle("Monstros (Nome/Dist)", 80, false, function(state)
+    Config.AnimatronicsNames = state
+    -- O Billboard atualiza sozinho checando a variável Config.AnimatronicsNames
+end)
 
-Tab:CreateToggle({
-    Name = "Ver Fuses (Fusíveis)",
-    CurrentValue = false,
-    Flag = "ToggleFuses",
-    Callback = function(Value)
-        Config.Fuses = Value
-        for _, box in pairs(ActiveESP.Fuses) do
-            if box then box.Visible = Value end
-        end
-    end,
-})
+CreateToggle("Fuses (Itens)", 120, false, function(state)
+    Config.Fuses = state
+    for _, box in pairs(ActiveESP.Fuses) do
+        if box then box.Visible = state end
+    end
+    -- O Billboard dos fuses também checa a variável
+end)
 
 --------------------------------------------------------------------------------
--- LOOPS DE DETECÇÃO (SEGURANÇA E PERFORMANCE)
+-- LOOPS DE MONITORAMENTO
 --------------------------------------------------------------------------------
 
--- 1. Monitorar Pasta dos Animatronics
 local function MonitorAnimatronics()
-    -- Tenta achar a pasta com segurança
     local gameFolder = Workspace:FindFirstChild("Game")
     if not gameFolder then return end
     
     local animsFolder = gameFolder:FindFirstChild("Animatronics")
     if not animsFolder then return end
     
-    local targetFolder = animsFolder:FindFirstChild("Animatronics") -- As vezes a pasta é dupla
-    if not targetFolder then targetFolder = animsFolder end
+    local targetFolder = animsFolder:FindFirstChild("Animatronics") or animsFolder
 
-    -- Adiciona os atuais
+    -- Adicionar existentes
     for _, v in pairs(targetFolder:GetChildren()) do
         if v:IsA("Model") then AddAnimatronicESP(v) end
     end
 
-    -- Escuta novos (Spawn Dinâmico)
+    -- Adicionar novos (Spawn)
     targetFolder.ChildAdded:Connect(function(child)
         if child:IsA("Model") then
-            -- Espera um pouco pro modelo carregar as parts
-            task.wait(0.5)
+            task.wait(0.5) -- Espera carregar
             AddAnimatronicESP(child)
         end
     end)
 end
 
--- 2. Monitorar Fuses (Varredura Otimizada)
--- Em vez de DescendantAdded no Workspace todo (que laga), fazemos check periódico
+-- Monitorar Fuses (Loop leve a cada 2s)
 task.spawn(function()
     while true do
-        task.wait(2) -- Verifica a cada 2 segundos (muito leve)
+        task.wait(2)
         for _, obj in pairs(Workspace:GetDescendants()) do
             if obj:IsA("Tool") and obj.Name == "Fuse" then
                 AddFuseESP(obj)
@@ -241,11 +298,6 @@ task.spawn(function()
     end
 end)
 
--- Inicializar
+-- Iniciar
 MonitorAnimatronics()
-Rayfield:Notify({
-    Title = "Script Carregado",
-    Content = "Snap ESP V6 Ultimate ativado com sucesso.",
-    Duration = 5,
-    Image = 4483362458,
-})
+print("SNAP ESP v6 NATIVE - Carregado com sucesso!")
