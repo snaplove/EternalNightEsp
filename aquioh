@@ -1,142 +1,256 @@
--- Carrega a Rayfield (SÓ FUNCIONA EM EXECUTOR, NÃO NO STUDIO)
+--[[ 
+    SNAP ESP v7 - ULTRA OPTIMIZED
+    Foco: Máximo FPS, Zero Lag.
+]]
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local Window = Rayfield:CreateWindow({
-    Name = "Snap ESP - V6 Ultimate",
-    LoadingTitle = "Carregando...",
-    LoadingSubtitle = "by Snap",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "SnapESPConfig",
-        FileName = "Config"
-    },
-    KeySystem = false,
-})
-
-local Tab = Window:CreateTab("Visuals", 4483362458)
-
--- Variáveis e Serviços
+-- SERVIÇOS
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
-local Config = {
+-- CONFIGURAÇÕES DE PERFORMANCE
+local SETTINGS = {
+    MaxDistance = 500,      -- Só mostra ESP se estiver a menos de 500 metros (Mude se quiser)
+    UpdateInterval = 0.2,   -- Atualiza o texto a cada 0.2s (5 vezes/segundo) em vez de 60x
+    FuseColor = Color3.fromRGB(0, 255, 0),
+    MonsterColor = Color3.fromRGB(255, 0, 0)
+}
+
+local Toggles = {
     Animatronics = false,
     Names = false,
     Fuses = false
 }
-local ActiveESP = { Animatronics = {}, Fuses = {} }
 
--- Funções do ESP
-local function CreateBillboard(target, name, color, checkFunc)
+local Cache = {
+    Animatronics = {}, -- Guarda {highlight, billboard, lastUpdate}
+    Fuses = {}         -- Guarda {box, billboard, lastUpdate}
+}
+
+-- INTERFACE
+local Window = Rayfield:CreateWindow({
+    Name = "Snap ESP - V7 Otimizado",
+    LoadingTitle = "Carregando...",
+    LoadingSubtitle = "Zero Lag Edition",
+    ConfigurationSaving = { Enabled = false },
+    KeySystem = false,
+})
+local Tab = Window:CreateTab("FPS Boost", 4483362458)
+
+--------------------------------------------------------------------------------
+-- SISTEMA DE ESP OTIMIZADO
+--------------------------------------------------------------------------------
+
+-- Função que atualiza o visual (Roda no RenderStepped, mas com limitador)
+local function UpdateESP()
+    local myChar = LocalPlayer.Character
+    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    
+    if not myRoot then return end
+    local myPos = myRoot.Position
+    local now = tick() -- Tempo atual
+
+    -- 1. Atualizar Animatronics
+    for model, data in pairs(Cache.Animatronics) do
+        if model.Parent then
+            local root = model.PrimaryPart or model:FindFirstChild("HumanoidRootPart")
+            if root then
+                local dist = (root.Position - myPos).Magnitude
+                
+                -- OTIMIZAÇÃO: Só desenha se estiver perto e ativo
+                if Toggles.Animatronics and dist <= SETTINGS.MaxDistance then
+                    data.highlight.Enabled = true
+                    
+                    -- OTIMIZAÇÃO: Só atualiza o texto se passou o tempo (UpdateInterval)
+                    if Toggles.Names and (now - data.lastUpdate > SETTINGS.UpdateInterval) then
+                        data.billboard.Enabled = true
+                        data.text.Text = string.format("%s\n[%d m]", model.Name, math.floor(dist))
+                        data.lastUpdate = now
+                    elseif not Toggles.Names then
+                        data.billboard.Enabled = false
+                    end
+                else
+                    -- Se estiver longe ou desligado, esconde tudo
+                    data.highlight.Enabled = false
+                    data.billboard.Enabled = false
+                end
+            end
+        else
+            -- Limpeza de Cache se o objeto sumiu
+            data.highlight:Destroy()
+            data.billboard:Destroy()
+            Cache.Animatronics[model] = nil
+        end
+    end
+
+    -- 2. Atualizar Fuses
+    for tool, data in pairs(Cache.Fuses) do
+        if tool.Parent and tool:FindFirstChild("Handle") then
+            local handle = tool.Handle
+            local dist = (handle.Position - myPos).Magnitude
+
+            if Toggles.Fuses and dist <= SETTINGS.MaxDistance then
+                data.box.Visible = true
+                
+                if (now - data.lastUpdate > SETTINGS.UpdateInterval) then
+                    data.billboard.Enabled = true
+                    data.text.Text = string.format("Fuse\n[%d m]", math.floor(dist))
+                    data.lastUpdate = now
+                end
+            else
+                data.box.Visible = false
+                data.billboard.Enabled = false
+            end
+        else
+            if data.box then data.box:Destroy() end
+            if data.billboard then data.billboard:Destroy() end
+            Cache.Fuses[tool] = nil
+        end
+    end
+end
+
+-- Função para criar os objetos visuais (Só roda 1 vez por item)
+local function AddAnimatronic(model)
+    if Cache.Animatronics[model] then return end
+
+    local hl = Instance.new("Highlight")
+    hl.FillColor = SETTINGS.MonsterColor
+    hl.OutlineColor = Color3.new(1,1,1)
+    hl.FillTransparency = 0.5
+    hl.Parent = model
+    hl.Enabled = false -- Começa desligado, o Loop ativa
+
     local bg = Instance.new("BillboardGui")
-    bg.Name = "ESP_Info"
-    bg.Adornee = target
     bg.Size = UDim2.new(0, 200, 0, 50)
     bg.StudsOffset = Vector3.new(0, 3, 0)
     bg.AlwaysOnTop = true
-    bg.Parent = target
-    
+    bg.Enabled = false
+    bg.Parent = model.PrimaryPart or model:FindFirstChild("HumanoidRootPart")
+
     local tl = Instance.new("TextLabel", bg)
     tl.Size = UDim2.new(1,0,1,0)
     tl.BackgroundTransparency = 1
-    tl.TextColor3 = color
-    tl.TextStrokeTransparency = 0
+    tl.TextColor3 = SETTINGS.MonsterColor
     tl.Font = Enum.Font.GothamBold
     tl.TextSize = 14
-    
-    RunService.RenderStepped:Connect(function()
-        if not target or not target.Parent or not checkFunc() then 
-            bg.Enabled = false 
-            return 
-        end
-        bg.Enabled = true
-        local dist = (LocalPlayer.Character.HumanoidRootPart.Position - target.Position).Magnitude
-        tl.Text = string.format("%s\n[%d m]", name, math.floor(dist))
-    end)
-end
+    tl.TextStrokeTransparency = 0
 
-local function AddAnimatronic(model)
-    if ActiveESP.Animatronics[model] then return end
-    
-    local hl = Instance.new("Highlight")
-    hl.FillColor = Color3.fromRGB(255, 0, 0)
-    hl.Parent = model
-    hl.Enabled = Config.Animatronics
-    
-    local root = model.PrimaryPart or model:FindFirstChild("HumanoidRootPart")
-    if root then
-        CreateBillboard(root, model.Name, Color3.fromRGB(255, 0, 0), function() return Config.Names end)
-    end
-    
-    ActiveESP.Animatronics[model] = hl
+    Cache.Animatronics[model] = {
+        highlight = hl,
+        billboard = bg,
+        text = tl,
+        lastUpdate = 0
+    }
 end
 
 local function AddFuse(tool)
-    if ActiveESP.Fuses[tool] then return end
-    local h = tool:FindFirstChild("Handle")
-    if not h then return end
-    
+    if Cache.Fuses[tool] then return end
+    local handle = tool:FindFirstChild("Handle")
+    if not handle then return end
+
     local box = Instance.new("BoxHandleAdornment")
-    box.Adornee = h
-    box.Size = h.Size + Vector3.new(0.2,0.2,0.2)
-    box.Color3 = Color3.fromRGB(0, 255, 0)
+    box.Adornee = handle
+    box.Size = handle.Size + Vector3.new(0.2, 0.2, 0.2)
+    box.Color3 = SETTINGS.FuseColor
     box.AlwaysOnTop = true
     box.ZIndex = 5
-    box.Transparency = 0.5
-    box.Parent = h
-    box.Visible = Config.Fuses
-    
-    CreateBillboard(h, "Fuse", Color3.fromRGB(0, 255, 0), function() return Config.Fuses end)
-    ActiveESP.Fuses[tool] = box
+    box.Transparency = 0.4
+    box.Visible = false
+    box.Parent = handle
+
+    local bg = Instance.new("BillboardGui")
+    bg.Size = UDim2.new(0, 200, 0, 50)
+    bg.StudsOffset = Vector3.new(0, 1, 0)
+    bg.AlwaysOnTop = true
+    bg.Enabled = false
+    bg.Parent = handle
+
+    local tl = Instance.new("TextLabel", bg)
+    tl.Size = UDim2.new(1,0,1,0)
+    tl.BackgroundTransparency = 1
+    tl.TextColor3 = SETTINGS.FuseColor
+    tl.Font = Enum.Font.GothamBold
+    tl.TextSize = 12
+    tl.TextStrokeTransparency = 0
+
+    Cache.Fuses[tool] = {
+        box = box,
+        billboard = bg,
+        text = tl,
+        lastUpdate = 0
+    }
 end
 
--- Botões da Rayfield
+--------------------------------------------------------------------------------
+-- BOTÕES E CONTROLES
+--------------------------------------------------------------------------------
+
 Tab:CreateToggle({
     Name = "Ver Monstros",
     CurrentValue = false,
-    Callback = function(v) 
-        Config.Animatronics = v 
-        for _, hl in pairs(ActiveESP.Animatronics) do hl.Enabled = v end
-    end,
+    Callback = function(v) Toggles.Animatronics = v end,
 })
 
 Tab:CreateToggle({
-    Name = "Ver Nomes",
+    Name = "Ver Nomes (Monstros)",
     CurrentValue = false,
-    Callback = function(v) Config.Names = v end,
+    Callback = function(v) Toggles.Names = v end,
 })
 
 Tab:CreateToggle({
     Name = "Ver Fuses",
     CurrentValue = false,
-    Callback = function(v) 
-        Config.Fuses = v 
-        for _, b in pairs(ActiveESP.Fuses) do b.Visible = v end
-    end,
+    Callback = function(v) Toggles.Fuses = v end,
 })
 
--- Inicialização
-local function Init()
-    -- Monstros
-    local g = Workspace:FindFirstChild("Game")
-    if g and g:FindFirstChild("Animatronics") then
-        local folder = g.Animatronics:FindFirstChild("Animatronics") or g.Animatronics
-        for _,v in pairs(folder:GetChildren()) do if v:IsA("Model") then AddAnimatronic(v) end end
-        folder.ChildAdded:Connect(function(v) task.wait(0.5) if v:IsA("Model") then AddAnimatronic(v) end end)
-    end
-    
-    -- Fuses (Loop Otimizado)
-    task.spawn(function()
-        while true do
-            task.wait(2)
-            for _,v in pairs(Workspace:GetDescendants()) do
-                if v:IsA("Tool") and v.Name == "Fuse" then AddFuse(v) end
+Tab:CreateSlider({
+    Name = "Distância Máxima (Render)",
+    Range = {100, 2000},
+    Increment = 50,
+    Suffix = "Studs",
+    CurrentValue = 500,
+    Callback = function(v) SETTINGS.MaxDistance = v end,
+})
+
+--------------------------------------------------------------------------------
+-- INICIALIZAÇÃO E LOOPS
+--------------------------------------------------------------------------------
+
+-- Loop Principal de Renderização (Onde acontece a mágica do FPS)
+RunService.RenderStepped:Connect(UpdateESP)
+
+-- Scanner Lento para novos monstros (Roda só 1x por segundo)
+task.spawn(function()
+    while true do
+        local g = Workspace:FindFirstChild("Game")
+        if g and g:FindFirstChild("Animatronics") then
+            local folder = g.Animatronics:FindFirstChild("Animatronics") or g.Animatronics
+            for _, v in pairs(folder:GetChildren()) do
+                if v:IsA("Model") then AddAnimatronic(v) end
             end
         end
-    end)
-end
+        task.wait(1) 
+    end
+end)
 
-Init()
-Rayfield:LoadConfiguration()
+-- Scanner Mais Lento para Fuses (Roda a cada 3 segundos - Fuses não se mexem muito)
+task.spawn(function()
+    while true do
+        for _, v in pairs(Workspace:GetDescendants()) do
+            if v:IsA("Tool") and v.Name == "Fuse" then
+                AddFuse(v)
+            end
+        end
+        task.wait(3) -- Aumentado para reduzir lag de scan
+    end
+end)
+
+Rayfield:Notify({
+    Title = "Otimizado!",
+    Content = "Snap ESP v7 carregado. Lag reduzido.",
+    Duration = 3,
+    Image = 4483362458,
+})
