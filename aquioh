@@ -1,35 +1,251 @@
---[[ SNAP ESP v5 - Protected & Robust Version ]]
-local _s0, _s1, _s3, _s4, _s5, _s6, _s7, _s8, _s9, _s10, _s11, _s12, _s13, _s14, _s15, _s16, _s17, _s18, _s19, _s20, _s21, _s22, _s23 = "Players", "PlayerGui", "SnapEspUI", "ResetOnSpawn", "MainFrame", "Size", "Position", "BackgroundColor3", "BorderColor3", "BorderSizePixel", "Active", "Draggable", "Title", "Text", "TextColor3", "Font", "TextSize", "MinimizeButton", "OpenButton", "InfoFrame", "Visible", "Handle", "ESPHighlight";
-local _v0 = game:GetService(_s0); local _v1 = _v0.LocalPlayer; local _v2 = _v1:WaitForChild(_s1);
-local _tbl0, _tbl1 = { Animatronics = {}, AnimatronicsLabels = {}, Fuses = {} }, { Animatronics = true, AnimatronicsNames = true, Fuses = true };
-local _c0 = { Color3.fromRGB(255, 80, 80), Color3.fromRGB(80, 255, 80), Color3.fromRGB(80, 80, 255), Color3.fromRGB(255, 255, 80), Color3.fromRGB(255, 80, 255), Color3.fromRGB(80, 255, 255) };
-local _c1 = Color3.fromRGB(255, 255, 255); local _ui0 = Instance.new("ScreenGui"); _ui0.Name = _s3; _ui0[_s4] = false; _ui0.Parent = _v2; local _ui1 = Instance.new("Frame"); _ui1.Name = _s5; _ui1[_s6] = UDim2.new(0, 220, 0, 190); _ui1[_s7] = UDim2.new(0.02, 0, 0.5, -95); _ui1[_s8] = Color3.fromRGB(40, 40, 40); _ui1[_s9] = Color3.fromRGB(100, 100, 100);
-_ui1[_s10] = 2; _ui1[_s11] = true; _ui1[_s12] = true; _ui1.Parent = _ui0; local _ui2 = Instance.new("TextLabel"); _ui2.Name = _s13; _ui2[_s6] = UDim2.new(1, 0, 0, 30); _ui2[_s8] = Color3.fromRGB(30, 30, 30); _ui2[_s9] = Color3.fromRGB(100, 100, 100); _ui2[_s14] = "SNAP ESP"; _ui2[_s15] = Color3.fromRGB(255, 255, 255); _ui2[_s16] = Enum.Font.SourceSansBold; _ui2[_s17] = 18; _ui2.Parent = _ui1;
-local _ui3 = Instance.new("TextButton"); _ui3.Name = _s18; _ui3[_s6] = UDim2.new(0, 20, 0, 20); _ui3[_s7] = UDim2.new(1, -25, 0, 5); _ui3[_s8] = Color3.fromRGB(80, 80, 80); _ui3[_s14] = "_"; _ui3[_s15] = Color3.fromRGB(255, 255, 255); _ui3[_s16] = Enum.Font.SourceSansBold; _ui3[_s17] = 16; _ui3.Parent = _ui2; local _ui4 = Instance.new("TextButton"); _ui4.Name = _s19; _ui4[_s6] = UDim2.new(0, 50, 0, 30);
-_ui4[_s7] = _ui1[_s7]; _ui4[_s8] = Color3.fromRGB(40, 40, 40); _ui4[_s9] = Color3.fromRGB(100, 100, 100); _ui4[_s14] = "[+]"; _ui4[_s15] = Color3.fromRGB(255, 255, 255); _ui4[_s16] = Enum.Font.SourceSansBold; _ui4[_s17] = 20; _ui4[_s21] = false; _ui4[_s12] = true; _ui4[_s11] = true; _ui4.Parent = _ui0; local function _f0(_p, _t, _y) local _l = Instance.new("TextLabel");
-_l.Size = UDim2.new(0.7, 0, 0, 30); _l.Position = UDim2.new(0.05, 0, 0, _y); _l.BackgroundTransparency = 1; _l.Text = _t; _l.TextColor3 = Color3.fromRGB(220, 220, 220); _l.Font = Enum.Font.SourceSans; _l.TextSize = 16; _l.TextXAlignment = Enum.TextXAlignment.Left; _l.Parent = _p; local _c = Instance.new("TextButton"); _c.Size = UDim2.new(0, 20, 0, 20);
-_c.Position = UDim2.new(0.95, -20, 0, _y + 5); _c.BackgroundColor3 = Color3.fromRGB(30, 30, 30); _c.BorderColor3 = Color3.fromRGB(100, 100, 100); _c.Text = "X"; _c.TextColor3 = Color3.fromRGB(80, 255, 80); _c.Font = Enum.Font.SourceSansBold; _c.TextSize = 14; _c.Parent = _p; return _c; end; local _cb0 = _f0(_ui1, "Animatronics (Cor)", 40);
-local _cb1 = _f0(_ui1, "Animatronics (Nome)", 75); local _cb2 = _f0(_ui1, "Fuses ESP", 110); local _ui5 = Instance.new("TextButton"); _ui5[_s6] = UDim2.new(1, -20, 0, 25); _ui5[_s7] = UDim2.new(0.5, -((_ui1.AbsoluteSize.X - 20) / 2), 0, 150); _ui5[_s8] = Color3.fromRGB(60, 60, 60); _ui5[_s9] = Color3.fromRGB(100, 100, 100); _ui5[_s14] = "Info & Créditos";
-_ui5[_s15] = Color3.fromRGB(220, 220, 220); _ui5[_s16] = Enum.Font.SourceSans; _ui5[_s17] = 16; _ui5.Parent = _ui1; local _ui6 = Instance.new("Frame"); _ui6.Name = _s20; _ui6[_s6] = UDim2.new(0, 300, 0, 250); _ui6[_s7] = UDim2.new(0.5, -150, 0.5, -125); _ui6[_s8] = Color3.fromRGB(40, 40, 40); _ui6[_s9] = Color3.fromRGB(100, 100, 100); _ui6[_s21] = false;
-_ui6.Parent = _ui0; local _ui7 = Instance.new("TextLabel"); _ui7[_s6] = UDim2.new(1, 0, 0, 30); _ui7[_s8] = Color3.fromRGB(30, 30, 30); _ui7[_s14] = "Informações"; _ui7[_s15] = Color3.fromRGB(255, 255, 255); _ui7[_s16] = Enum.Font.SourceSansBold; _ui7[_s17] = 18; _ui7.Parent = _ui6; local _ui8 = Instance.new("TextButton"); _ui8[_s6] = UDim2.new(0, 20, 0, 20);
-_ui8[_s7] = UDim2.new(1, -25, 0, 5); _ui8[_s8] = Color3.fromRGB(255, 80, 80); _ui8[_s14] = "X"; _ui8[_s15] = Color3.fromRGB(255, 255, 255); _ui8[_s16] = Enum.Font.SourceSansBold; _ui8[_s17] = 14; _ui8.Parent = _ui7; local _ui9 = Instance.new("TextLabel"); _ui9[_s6] = UDim2.new(1, -20, 1, -40); _ui9[_s7] = UDim2.new(0.5, -((_ui6.AbsoluteSize.X - 20) / 2), 0, 35);
-_ui9.BackgroundTransparency = 1; _ui9[_s15] = Color3.fromRGB(220, 220, 220); _ui9[_s16] = Enum.Font.SourceSans; _ui9[_s17] = 16; _ui9.TextWrapped = true; _ui9.TextXAlignment = Enum.TextXAlignment.Left; _ui9.TextYAlignment = Enum.TextYAlignment.Top; _ui9[_s14] = [[
--- CHANGELOG --
-v1-v3: Versões Iniciais.
-v4: Adicionado nome para o ESP de Fuses.
-v5: Corrigida a detecção de Fuses em tempo real.
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
 
--- CRÉDITOS --
-Script por: snapixetyy
-Canal: snapixetyy
->> Siga no YouTube!
-]]; _ui9.Parent = _ui6; local function _f1(_a, _c) if _a:FindFirstChild(_s23) then return _a:FindFirstChild(_s23) end; local h = Instance.new("Highlight"); h.Name = _s23; h.Parent = _a; h.OutlineColor = _c; h.FillTransparency = 1; return h; end;
-local function _f2(_p, _n, _c, _id) local _gn = "ESP_Name_" .. _id; if _v2:FindFirstChild(_gn) then return _v2:FindFirstChild(_gn) end; local _bg = Instance.new("BillboardGui"); _bg.Name = _gn; _bg.Adornee = _p; _bg.Size = UDim2.new(0, 150, 0, 40); _bg.StudsOffset = Vector3.new(0, 2.5, 0); _bg.AlwaysOnTop = true; _bg.Parent = _v2; local _tl = Instance.new("TextLabel");
-_tl.Size = UDim2.new(1, 0, 1, 0); _tl.BackgroundTransparency = 1; _tl.Text = _n; _tl.Font = Enum.Font.SourceSansBold; _tl.TextSize = 22; _tl.TextColor3 = _c; _tl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0); _tl.TextStrokeTransparency = 0; _tl.Parent = _bg; return _bg; end; local function _f3(_e) _tbl1.Animatronics = _e; for _, h in ipairs(_tbl0.Animatronics) do if h and h.Parent then h.Enabled = _e end end; end;
-local function _f4(_e) _tbl1.AnimatronicsNames = _e; for _, g in ipairs(_tbl0.AnimatronicsLabels) do if g and g.Parent then g.Enabled = _e end end; end; local function _f5(_e) _tbl1.Fuses = _e; for _, d in pairs(_tbl0.Fuses) do if d.highlight and d.highlight.Parent then d.highlight.Enabled = _e end; if d.label and d.label.Parent then d.label.Enabled = _e end; end; end;
-local function _f6() local _f = workspace:WaitForChild("Game"):WaitForChild("Animatronics"):WaitForChild("Animatronics"); if not _f then return end; for i, a in ipairs(_f:GetChildren()) do if a:IsA("Model") and a.PrimaryPart then local _c = _c0[(i - 1) % #_c0 + 1]; local _h = _f1(a, _c); _h.Enabled = _tbl1.Animatronics; table.insert(_tbl0.Animatronics, _h); local _l = _f2(a.PrimaryPart, a.Name, _c, a.Name);
-if _l then _l.Enabled = _tbl1.AnimatronicsNames; table.insert(_tbl0.AnimatronicsLabels, _l) end; end; end; end; local function _f7() local function _a(tool, handle) if not _tbl0.Fuses[handle] then local _h = _f1(handle, _c1); local _l = _f2(handle, tool.Name, _c1, tool:GetFullName()); _h.Enabled = _tbl1.Fuses; _l.Enabled = _tbl1.Fuses; _tbl0.Fuses[handle] = { highlight = _h, label = _l }; end; end;
-local function _p(item) if item:IsA("Tool") and item.Name == "Fuse" then local _h = item:FindFirstChild(_s22); if _h then _a(item, _h) else local c; c = item.ChildAdded:Connect(function(child) if child.Name == _s22 and child:IsA("BasePart") then _a(item, child); c:Disconnect(); end; end); end; end; end; for _, item in ipairs(workspace:GetDescendants()) do _p(item) end; workspace.DescendantAdded:Connect(_p);
-workspace.DescendantRemoving:Connect(function(item) if item:IsA("Tool") and item.Name == "Fuse" then local _h = item:FindFirstChild(_s22); if _h and _tbl0.Fuses[_h] then _tbl0.Fuses[_h].highlight:Destroy(); _tbl0.Fuses[_h].label:Destroy(); _tbl0.Fuses[_h] = nil; end; end; end); end; local function _f8(_cb, _t, _f) _cb.MouseButton1Click:Connect(function() local _e = not _tbl1[_t];
-_f(_e); _cb.Text = _e and "X" or ""; end); end; _f8(_cb0, "Animatronics", _f3); _f8(_cb1, "AnimatronicsNames", _f4); _f8(_cb2, "Fuses", _f5); _ui3.MouseButton1Click:Connect(function() _ui1.Visible = false; _ui4.Visible = true; _ui4.Position = _ui1.Position; end); _ui4.MouseButton1Click:Connect(function() _ui1.Visible = true; _ui4.Visible = false; _ui1.Position = _ui4.Position; end);
-_ui5.MouseButton1Click:Connect(function() _ui6.Visible = true; end); _ui8.MouseButton1Click:Connect(function() _ui6.Visible = false; end); _f6(); _f7(); print("SNAP ESP v5 (Final & Robust) Carregado!");
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+-- Configurações Globais
+local Config = {
+    Animatronics = false,
+    AnimatronicsNames = false,
+    Fuses = false,
+    FuseColor = Color3.fromRGB(0, 255, 0),
+    MonsterColor = Color3.fromRGB(255, 0, 0)
+}
+
+-- Tabelas de Armazenamento
+local ActiveESP = {
+    Animatronics = {},
+    Fuses = {}
+}
+
+--------------------------------------------------------------------------------
+-- SISTEMA DE UI (RAYFIELD)
+--------------------------------------------------------------------------------
+
+local Window = Rayfield:CreateWindow({
+    Name = "Snap ESP - Ultimate v6",
+    LoadingTitle = "Carregando...",
+    LoadingSubtitle = "by Snap",
+    ConfigurationSaving = { Enabled = false },
+    KeySystem = false,
+})
+
+local Tab = Window:CreateTab("Visuals", 4483362458) -- Icone de olho
+
+--------------------------------------------------------------------------------
+-- FUNÇÕES CORE (ESP)
+--------------------------------------------------------------------------------
+
+local function GetDistance(part)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and part then
+        return (LocalPlayer.Character.HumanoidRootPart.Position - part.Position).Magnitude
+    end
+    return 0
+end
+
+-- Cria Texto Flutuante com Distância
+local function CreateBillboard(target, name, color, isActiveFunc)
+    local bg = Instance.new("BillboardGui")
+    bg.Name = "SnapESP_Info"
+    bg.Adornee = target
+    bg.Size = UDim2.new(0, 200, 0, 50)
+    bg.StudsOffset = Vector3.new(0, 3, 0) -- Altura do texto
+    bg.AlwaysOnTop = true
+    bg.Parent = target
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = color
+    textLabel.TextStrokeTransparency = 0
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextSize = 15
+    textLabel.Parent = bg
+
+    -- Loop de atualização de distância
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if not target or not target.Parent or not isActiveFunc() then
+            connection:Disconnect()
+            bg:Destroy()
+            return
+        end
+        
+        local dist = math.floor(GetDistance(target))
+        textLabel.Text = string.format("%s\n[%d m]", name, dist)
+        textLabel.Visible = isActiveFunc() -- Só mostra se o toggle estiver ligado
+    end)
+    
+    return bg
+end
+
+-- ESP para Animatronics (Usa Highlight - Brilho)
+local function AddAnimatronicESP(model)
+    if ActiveESP.Animatronics[model] then return end -- Já tem
+
+    -- 1. Highlight (Brilho)
+    local hl = Instance.new("Highlight")
+    hl.Name = "SnapESP_Highlight"
+    hl.FillColor = Config.MonsterColor
+    hl.OutlineColor = Color3.new(1, 1, 1)
+    hl.FillTransparency = 0.5
+    hl.OutlineTransparency = 0
+    hl.Parent = model
+    hl.Enabled = Config.Animatronics
+
+    -- 2. Nome e Distância
+    local root = model.PrimaryPart or model:FindFirstChild("HumanoidRootPart") or model:FindFirstChildWhichIsA("BasePart")
+    if root then
+        CreateBillboard(root, model.Name, Config.MonsterColor, function() return Config.AnimatronicsNames end)
+    end
+
+    ActiveESP.Animatronics[model] = hl
+
+    -- Limpeza se o monstro morrer/sumir
+    model.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            ActiveESP.Animatronics[model] = nil
+        end
+    end)
+end
+
+-- ESP para Fuses (Usa BoxHandleAdornment - Linhas 3D)
+-- Isso é melhor que highlight para itens pequenos e não tem limite de quantidade
+local function AddFuseESP(tool)
+    if ActiveESP.Fuses[tool] then return end
+    
+    local handle = tool:FindFirstChild("Handle")
+    if not handle then return end
+
+    -- 1. Box Adornment (Caixa em volta)
+    local box = Instance.new("BoxHandleAdornment")
+    box.Name = "SnapESP_Box"
+    box.Adornee = handle
+    box.Size = handle.Size + Vector3.new(0.2, 0.2, 0.2)
+    box.Color3 = Config.FuseColor
+    box.Transparency = 0.4
+    box.AlwaysOnTop = true
+    box.ZIndex = 5
+    box.Parent = handle
+    box.Visible = Config.Fuses
+
+    -- 2. Nome
+    CreateBillboard(handle, "Fuse", Config.FuseColor, function() return Config.Fuses end)
+
+    ActiveESP.Fuses[tool] = box
+
+    tool.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            ActiveESP.Fuses[tool] = nil
+        end
+    end)
+end
+
+--------------------------------------------------------------------------------
+-- INTERAÇÃO DA UI
+--------------------------------------------------------------------------------
+
+Tab:CreateSection("Animatronics")
+
+Tab:CreateToggle({
+    Name = "Ver Animatronics (Highlight)",
+    CurrentValue = false,
+    Flag = "ToggleAnimatronics",
+    Callback = function(Value)
+        Config.Animatronics = Value
+        -- Atualiza os que já existem
+        for _, hl in pairs(ActiveESP.Animatronics) do
+            if hl then hl.Enabled = Value end
+        end
+    end,
+})
+
+Tab:CreateToggle({
+    Name = "Ver Nomes & Distância",
+    CurrentValue = false,
+    Flag = "ToggleNames",
+    Callback = function(Value)
+        Config.AnimatronicsNames = Value
+    end,
+})
+
+Tab:CreateColorPicker({
+    Name = "Cor dos Monstros",
+    Color = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        Config.MonsterColor = Value
+        for _, hl in pairs(ActiveESP.Animatronics) do
+            if hl then hl.FillColor = Value end
+        end
+    end
+})
+
+Tab:CreateSection("Itens")
+
+Tab:CreateToggle({
+    Name = "Ver Fuses (Fusíveis)",
+    CurrentValue = false,
+    Flag = "ToggleFuses",
+    Callback = function(Value)
+        Config.Fuses = Value
+        for _, box in pairs(ActiveESP.Fuses) do
+            if box then box.Visible = Value end
+        end
+    end,
+})
+
+--------------------------------------------------------------------------------
+-- LOOPS DE DETECÇÃO (SEGURANÇA E PERFORMANCE)
+--------------------------------------------------------------------------------
+
+-- 1. Monitorar Pasta dos Animatronics
+local function MonitorAnimatronics()
+    -- Tenta achar a pasta com segurança
+    local gameFolder = Workspace:FindFirstChild("Game")
+    if not gameFolder then return end
+    
+    local animsFolder = gameFolder:FindFirstChild("Animatronics")
+    if not animsFolder then return end
+    
+    local targetFolder = animsFolder:FindFirstChild("Animatronics") -- As vezes a pasta é dupla
+    if not targetFolder then targetFolder = animsFolder end
+
+    -- Adiciona os atuais
+    for _, v in pairs(targetFolder:GetChildren()) do
+        if v:IsA("Model") then AddAnimatronicESP(v) end
+    end
+
+    -- Escuta novos (Spawn Dinâmico)
+    targetFolder.ChildAdded:Connect(function(child)
+        if child:IsA("Model") then
+            -- Espera um pouco pro modelo carregar as parts
+            task.wait(0.5)
+            AddAnimatronicESP(child)
+        end
+    end)
+end
+
+-- 2. Monitorar Fuses (Varredura Otimizada)
+-- Em vez de DescendantAdded no Workspace todo (que laga), fazemos check periódico
+task.spawn(function()
+    while true do
+        task.wait(2) -- Verifica a cada 2 segundos (muito leve)
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("Tool") and obj.Name == "Fuse" then
+                AddFuseESP(obj)
+            end
+        end
+    end
+end)
+
+-- Inicializar
+MonitorAnimatronics()
+Rayfield:Notify({
+    Title = "Script Carregado",
+    Content = "Snap ESP V6 Ultimate ativado com sucesso.",
+    Duration = 5,
+    Image = 4483362458,
+})
